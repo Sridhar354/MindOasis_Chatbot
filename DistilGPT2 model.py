@@ -21,7 +21,7 @@ def load_and_preprocess_data():
     Load and preprocess the EmoCareAI/Psych8k dataset.
     """
     # Load dataset from Hugging Face
-login("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")
+login("hf_token")
 
 dataset = load_dataset('EmoCareAI/Psych8k')
 
