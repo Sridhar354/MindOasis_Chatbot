@@ -1,37 +1,32 @@
 import os
 import torch
-import pyttsx3
 import streamlit as st
 from datasets import load_dataset
 from transformers import GPT2Tokenizer, GPT2LMHeadModel, Trainer, TrainingArguments
 from huggingface_hub import login
-
 import re
-from datasets import load_dataset
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-
 import nltk
+
+# Download NLTK Data
 nltk.download("stopwords")
 nltk.download("punkt")
 
+# -------------------------------
+# 1. Load and Preprocess the Dataset
+# -------------------------------
 def load_and_preprocess_data():
     """
     Load and preprocess the EmoCareAI/Psych8k dataset.
-
-from huggingface_hub import login
-
-login("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")
     """
     # Load dataset from Hugging Face
-from datasets import load_dataset
-
+login("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")
 
 dataset = load_dataset('EmoCareAI/Psych8k')
 
 # Check the structure of the dataset
 print(dataset)
-
 
     # Load stopwords
     stop_words = set(stopwords.words('english'))
@@ -79,7 +74,6 @@ def tokenize_data(texts, tokenizer):
     def tokenize_function(example):
         return tokenizer(example, truncation=True, padding="max_length", max_length=512)
 
-    # Wrap text into a Dataset for tokenization
     from datasets import Dataset
     dataset = Dataset.from_dict({"text": texts})
     tokenized_data = dataset.map(lambda x: tokenize_function(x['text']), batched=True)
@@ -100,7 +94,6 @@ def fine_tune_distilgpt2(tokenized_data, tokenizer):
         evaluation_strategy="epoch",
         learning_rate=5e-5,
         per_device_train_batch_size=4,
-        per_device_eval_batch_size=4,
         num_train_epochs=45,  # Run for 45 epochs
         weight_decay=0.01,
         save_total_limit=2,
@@ -146,24 +139,12 @@ def generate_response(user_query, model, tokenizer):
     return response
 
 # -------------------------------
-# 5. Text-to-Speech (Optional)
-# -------------------------------
-def speak_response(response_text):
-    """
-    Convert chatbot response to speech using pyttsx3.
-    """
-    engine = pyttsx3.init()
-    engine.setProperty('rate', 150)
-    engine.say(response_text)
-    engine.runAndWait()
-
-# -------------------------------
-# 6. Streamlit Web Application
+# 5. Streamlit Web Application
 # -------------------------------
 def main():
     # Title
     st.title("MindOasis")
-    st.write("Welcome! I am here to support you with empathetic and helpful conversations.")
+    st.write("Welcome! I am here to provide supportive, text-based conversations.")
 
     # Log into Hugging Face Hub
     if not os.path.exists("./fine_tuned_distilgpt2_mental_health"):
@@ -185,9 +166,6 @@ def main():
     # User Input
     user_input = st.text_input("You:", placeholder="How are you feeling today?")
 
-    # Voice Output Checkbox
-    voice_output = st.checkbox("Enable Voice Response")
-
     # Generate and display response
     if st.button("Send") and user_input:
         response = generate_response(user_input, model, tokenizer)
@@ -200,10 +178,6 @@ def main():
         for role, text in st.session_state.conversation:
             st.write(f"**{role}:** {text}")
 
-        # Optional voice output
-        if voice_output:
-            speak_response(response)
-
     # End Conversation
     if st.button("End Conversation"):
         st.session_state.conversation = []
@@ -212,3 +186,5 @@ def main():
 # Run Streamlit App
 if __name__ == "__main__":
     main()
+pip install transformers datasets torch streamlit huggingface_hub nltk
+streamlit run mental_health_chatbot.py
